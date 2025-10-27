@@ -4,25 +4,13 @@ namespace Carone\Common\BulkOperations;
 
 class BulkOperationResult
 {
-    private string $operationType;
     private array $succeeded;
     private array $failed;
 
-    private function __construct(string $operationType, array $succeeded = [], array $failed = [])
+    public function __construct(array $succeeded = [], array $failed = [])
     {
-        $this->operationType = $operationType;
         $this->succeeded = $succeeded;
         $this->failed = $failed;
-    }
-
-    public static function createFor(string $operationType, array $succeeded = [], array $failed = []): self
-    {
-        return new self($operationType, $succeeded, $failed);
-    }
-
-    public function getOperationType(): string
-    {
-        return $this->operationType;
     }
 
     public function getSucceeded(): array
@@ -32,7 +20,17 @@ class BulkOperationResult
 
     public function getFailed(): array
     {
-        return $this->failed;
+        return array_map(function ($failedEntry) {
+            return is_array($failedEntry) ? $failedEntry['item'] : $failedEntry;
+        }, $this->failed);
+    }
+
+    public function getFailedWithErrors(): array
+    {
+        return array_values(array_filter($this->failed, function ($entry) {
+            // Keep only entries where 'error' is a non-empty string
+            return isset($entry['error']) && $entry['error'] !== null && $entry['error'] !== '';
+        }));
     }
 
     public function addSucceeded($item): self
@@ -41,9 +39,13 @@ class BulkOperationResult
         return $this;
     }
 
-    public function addFailed($item): self
+    public function addFailed($item, ?string $errorMessage = null): self
     {
-        $this->failed[] = $item;
+        $failedEntry = [
+            'item' => $item,
+            'error' => $errorMessage
+        ];
+        $this->failed[] = $failedEntry;
         return $this;
     }
 
@@ -70,9 +72,9 @@ class BulkOperationResult
     public function toArray(): array
     {
         return [
-            'operation_type' => $this->operationType,
-            'successful' => $this->succeeded,
-            'failed' => $this->failed,
+            'succeeded' => $this->getSucceeded(),
+            'failed' => $this->getFailed(),
+            'failed_with_errors' => $this->getFailedWithErrors(),
             'counts' => [
                 'successful' => $this->getSucceededCount(),
                 'failed' => $this->getFailedCount(),
