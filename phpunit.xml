@@ -7,11 +7,11 @@
          stopOnFailure="false"
          cacheDirectory=".phpunit.cache">
     <testsuites>
-        <testsuite name="Unit">
-            <directory suffix="Test.php">tests/Unit</directory>
+        <testsuite name="Search">
+            <directory suffix="Test.php">tests/Search</directory>
         </testsuite>
-        <testsuite name="Feature">
-            <directory suffix="Test.php">tests/Feature</directory>
+        <testsuite name="BulkOperations">
+            <directory suffix="Test.php">tests/BulkOperations</directory>
         </testsuite>
     </testsuites>
     <source>
